@@ -1,1 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="theme-color" content="#0b0f19">
+
+  <title>Debryne Info</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+
+    <div class="brand">
+
+      <div class="logo">D</div>
+
+      <div>
+        <h1>Debryne Info</h1>
+        <p>Student Information Assistant</p>
+      </div>
+
+    </div>
+
+    <div class="status">
+      <span></span>
+      Online
+    </div>
+
+  </header>
+
+
+  <main class="chat-area">
+
+    <div class="welcome">
+
+      <div class="bot-icon">
+        🤖
+      </div>
+
+      <h2>Welcome to Debryne Info</h2>
+
+      <p>
+        Ask me anything about your school,
+        department, NACOS, SUG, SOSSA,
+        SIWES, registration, exams and more.
+      </p>
+
+    </div>
+
+
+    <div id="chatBox" class="chat-box">
+
+      <div class="message bot">
+
+        <div class="avatar">
+          D
+        </div>
+
+        <div class="bubble">
+
+          👋 Hello! I'm
+          <strong>Debryne Info</strong>.
+
+          <br><br>
+
+          I can help you find verified
+          information about your school.
+
+          <br><br>
+
+          What would you like to know?
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="quick-actions">
+
+      <button onclick="askQuestion('When is registration closing?')">
+        📚 Registration
+      </button>
+
+      <button onclick="askQuestion('What are the school fees?')">
+        💰 School Fees
+      </button>
+
+      <button onclick="askQuestion('When is the next exam?')">
+        📝 Exams
+      </button>
+
+      <button onclick="askQuestion('Tell me about Computer Science')">
+        💻 Department
+      </button>
+
+      <button onclick="askQuestion('Tell me about NACOS')">
+        🎓 NACOS
+      </button>
+
+      <button onclick="askQuestion('Tell me about SIWES')">
+        🧑‍💻 SIWES
+      </button>
+
+    </div>
+
+  </main>
+
+
+  <div class="input-area">
+
+    <input
+      type="text"
+      id="questionInput"
+      placeholder="Ask Debryne Info anything..."
+      autocomplete="off"
+    >
+
+    <button id="sendBtn" onclick="sendQuestion()">
+      ➤
+    </button>
+
+  </div>
+
+
+  <footer>
+
+    <strong>DEBRYNE UPDATE</strong>
+
+    <span>
+      • Bringing You Valid News When It Matters.
+    </span>
+
+  </footer>
+
+</div>
+
+
+<script type="module" src="app.js"></script>
+
+</body>
+
+</html>
