@@ -13,60 +13,33 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
 
-const loginScreen =
-  document.getElementById("loginScreen");
+document.addEventListener("DOMContentLoaded", () => {
 
-const dashboard =
-  document.getElementById("dashboard");
+  const loginScreen = document.getElementById("loginScreen");
+  const dashboard = document.getElementById("dashboard");
 
-const loginButton =
-  document.getElementById("loginButton");
+  const loginButton = document.getElementById("loginButton");
+  const logoutButton = document.getElementById("logoutButton");
 
-const logoutButton =
-  document.getElementById("logoutButton");
-
-const loginStatus =
-  document.getElementById("loginStatus");
-
-const saveButton =
-  document.getElementById("saveButton");
-
-const status =
-  document.getElementById("status");
+  const loginStatus = document.getElementById("loginStatus");
+  const saveButton = document.getElementById("saveButton");
+  const status = document.getElementById("status");
 
 
-/* ==============================
-   LOGIN
-============================== */
+  // LOGIN
+  loginButton.addEventListener("click", async () => {
 
-loginButton.addEventListener(
-  "click",
-  async function () {
-
-    const email =
-      document.getElementById("email")
-        .value.trim();
-
-    const password =
-      document.getElementById("password")
-        .value;
-
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
     if (!email || !password) {
-
-      loginStatus.innerText =
-        "⚠️ Enter your email and password.";
-
+      loginStatus.textContent =
+        "⚠️ Please enter your email and password.";
       return;
-
     }
 
-
     loginButton.disabled = true;
-
-    loginButton.innerText =
-      "⏳ Logging in...";
-
+    loginButton.textContent = "⏳ Logging in...";
 
     try {
 
@@ -76,95 +49,73 @@ loginButton.addEventListener(
         password
       );
 
-      loginStatus.innerText =
-        "✅ Login successful.";
+      loginStatus.textContent =
+        "✅ Login successful!";
 
     } catch (error) {
 
-      console.error(error);
+      console.error("LOGIN ERROR:", error);
 
-      loginStatus.innerText =
-        "❌ Login failed. Check your email and password.";
+      loginStatus.textContent =
+        "❌ " + error.message;
 
       loginButton.disabled = false;
-
-      loginButton.innerText =
-        "🔐 Login";
-
+      loginButton.textContent = "🔐 Login";
     }
 
-  }
-);
+  });
 
 
-/* ==============================
-   CHECK LOGIN
-============================== */
-
-onAuthStateChanged(
-  auth,
-  function (user) {
+  // CHECK LOGIN
+  onAuthStateChanged(auth, (user) => {
 
     if (user) {
 
-      loginScreen.style.display =
-        "none";
-
-      dashboard.style.display =
-        "block";
+      loginScreen.style.display = "none";
+      dashboard.style.display = "block";
 
     } else {
 
-      loginScreen.style.display =
-        "flex";
-
-      dashboard.style.display =
-        "none";
+      loginScreen.style.display = "flex";
+      dashboard.style.display = "none";
 
     }
 
-  }
-);
+  });
 
 
-/* ==============================
-   LOGOUT
-============================== */
+  // LOGOUT
+  logoutButton.addEventListener("click", async () => {
 
-logoutButton.addEventListener(
-  "click",
-  async function () {
+    try {
 
-    await signOut(auth);
+      await signOut(auth);
 
-  }
-);
+    } catch (error) {
+
+      console.error("LOGOUT ERROR:", error);
+
+    }
+
+  });
 
 
-/* ==============================
-   SAVE INFORMATION
-============================== */
-
-saveButton.addEventListener(
-  "click",
-  async function () {
+  // SAVE INFORMATION
+  saveButton.addEventListener("click", async () => {
 
     const category =
-      document.getElementById("category")
-        .value;
+      document.getElementById("category").value;
 
     const question =
-      document.getElementById("question")
-        .value.trim();
+      document.getElementById("question").value.trim();
 
     const answer =
-      document.getElementById("answer")
-        .value.trim();
+      document.getElementById("answer").value.trim();
 
 
     if (!question || !answer) {
 
-      status.innerText =
+      status.textContent =
         "⚠️ Enter both the question and answer.";
 
       return;
@@ -173,73 +124,56 @@ saveButton.addEventListener(
 
 
     saveButton.disabled = true;
-
-    saveButton.innerText =
-      "⏳ Saving...";
+    saveButton.textContent = "⏳ Saving...";
 
 
     try {
 
       const informationRef =
-        push(
-          ref(
-            database,
-            "information"
-          )
-        );
+        push(ref(database, "information"));
 
 
-      await set(
-        informationRef,
-        {
+      await set(informationRef, {
 
-          category:
-            category,
+        category: category,
 
-          question:
-            question,
+        question: question,
 
-          answer:
-            answer,
+        answer: answer,
 
-          createdAt:
-            new Date().toISOString(),
+        createdAt:
+          new Date().toISOString(),
 
-          createdBy:
-            auth.currentUser.email
+        createdBy:
+          auth.currentUser
+            ? auth.currentUser.email
+            : "Admin"
 
-        }
-      );
+      });
 
 
-      status.innerText =
+      status.textContent =
         "✅ Information saved successfully!";
 
 
-      document.getElementById(
-        "question"
-      ).value = "";
-
-      document.getElementById(
-        "answer"
-      ).value = "";
+      document.getElementById("question").value = "";
+      document.getElementById("answer").value = "";
 
 
     } catch (error) {
 
-      console.error(error);
+      console.error("SAVE ERROR:", error);
 
-      status.innerText =
-        "❌ Save failed: " +
-        error.message;
+      status.textContent =
+        "❌ Save failed: " + error.message;
 
     }
 
 
     saveButton.disabled = false;
-
-    saveButton.innerText =
+    saveButton.textContent =
       "💾 Save Information";
 
-  }
-);
+  });
+
+});
