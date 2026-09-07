@@ -7,7 +7,12 @@ import {
 
 
 // ==========================================
-// DEFAULT KNOWLEDGE
+// DEBRYNE INFO — SMART STUDENT ASSISTANT
+// ==========================================
+
+
+// ==========================================
+// DEFAULT CONVERSATIONAL KNOWLEDGE
 // ==========================================
 
 const defaultKnowledge = [
@@ -19,7 +24,8 @@ const defaultKnowledge = [
       "hey",
       "good morning",
       "good afternoon",
-      "good evening"
+      "good evening",
+      "how are you"
     ],
 
     answer:
@@ -84,7 +90,9 @@ async function getFirebaseInformation() {
       await get(informationRef);
 
     if (!snapshot.exists()) {
+
       return [];
+
     }
 
     return Object.values(snapshot.val());
@@ -97,7 +105,9 @@ async function getFirebaseInformation() {
     );
 
     return [];
+
   }
+
 }
 
 
@@ -114,6 +124,134 @@ function cleanText(text) {
     .trim();
 
 }
+
+
+// ==========================================
+// SYNONYMS / WORD GROUPS
+// ==========================================
+
+const synonymGroups = {
+
+  registration: [
+    "registration",
+    "register",
+    "registered",
+    "registration process",
+    "course registration",
+    "course reg"
+  ],
+
+  exam: [
+    "exam",
+    "exams",
+    "examination",
+    "examinations",
+    "test",
+    "tests"
+  ],
+
+  fee: [
+    "fee",
+    "fees",
+    "school fee",
+    "school fees",
+    "payment",
+    "payments"
+  ],
+
+  result: [
+    "result",
+    "results",
+    "result checker",
+    "academic result"
+  ],
+
+  admission: [
+    "admission",
+    "admissions",
+    "post utme",
+    "screening",
+    "entrance"
+  ],
+
+  clearance: [
+    "clearance",
+    "clearing",
+    "clear"
+  ],
+
+  department: [
+    "department",
+    "dept",
+    "course",
+    "programme",
+    "program"
+  ],
+
+  computerScience: [
+    "computer science",
+    "computer",
+    "cs",
+    "computing"
+  ],
+
+  siwes: [
+    "siwes",
+    "industrial training",
+    "it",
+    "industrial attachment",
+    "student industrial work experience"
+  ],
+
+  nacos: [
+    "nacos",
+    "computer society",
+    "computer students association"
+  ],
+
+  sug: [
+    "sug",
+    "student union",
+    "student union government"
+  ],
+
+  sossa: [
+    "sossa",
+    "school of science",
+    "science students association"
+  ],
+
+  semester: [
+    "semester",
+    "session",
+    "academic semester"
+  ],
+
+  deadline: [
+    "deadline",
+    "closing date",
+    "closing",
+    "last day",
+    "due date",
+    "final date",
+    "ends",
+    "end date"
+  ],
+
+  timetable: [
+    "timetable",
+    "schedule",
+    "calendar",
+    "programme schedule"
+  ],
+
+  date: [
+    "date",
+    "day",
+    "when"
+  ]
+
+};
 
 
 // ==========================================
@@ -144,6 +282,7 @@ const stopWords = new Set([
   "did",
   "will",
   "may",
+  "might",
   "please",
   "tell",
   "me",
@@ -170,7 +309,14 @@ const stopWords = new Set([
   "with",
   "has",
   "have",
-  "been"
+  "had",
+  "been",
+  "there",
+  "any",
+  "some",
+  "more",
+  "much",
+  "please"
 
 ]);
 
@@ -192,6 +338,72 @@ function getImportantWords(text) {
 
 
 // ==========================================
+// FIND SYNONYM GROUP
+// ==========================================
+
+function getSynonymGroup(word) {
+
+  const cleanWord =
+    cleanText(word);
+
+  for (
+    const groupName in synonymGroups
+  ) {
+
+    const words =
+      synonymGroups[groupName];
+
+    for (const synonym of words) {
+
+      if (
+        cleanWord ===
+        cleanText(synonym)
+      ) {
+
+        return groupName;
+
+      }
+
+    }
+
+  }
+
+  return null;
+
+}
+
+
+// ==========================================
+// CHECK SYNONYM MATCH
+// ==========================================
+
+function synonymsMatch(
+  word1,
+  word2
+) {
+
+  const group1 =
+    getSynonymGroup(word1);
+
+  const group2 =
+    getSynonymGroup(word2);
+
+  if (
+    group1 &&
+    group2 &&
+    group1 === group2
+  ) {
+
+    return true;
+
+  }
+
+  return false;
+
+}
+
+
+// ==========================================
 // WORD SIMILARITY
 // ==========================================
 
@@ -200,32 +412,125 @@ function wordsAreSimilar(
   word2
 ) {
 
-  if (word1 === word2) {
+  if (
+    word1 === word2
+  ) {
+
     return true;
+
   }
+
+
+  if (
+    synonymsMatch(
+      word1,
+      word2
+    )
+  ) {
+
+    return true;
+
+  }
+
 
   if (
     word1.startsWith(word2) ||
     word2.startsWith(word1)
   ) {
+
     return true;
+
   }
+
 
   if (
     word1.endsWith("s") &&
     word1.slice(0, -1) === word2
   ) {
+
     return true;
+
   }
+
 
   if (
     word2.endsWith("s") &&
     word2.slice(0, -1) === word1
   ) {
+
     return true;
+
   }
 
+
   return false;
+
+}
+
+
+// ==========================================
+// CHECK TOPIC MATCH
+// ==========================================
+
+function topicsMatch(
+  userText,
+  storedText
+) {
+
+  let score = 0;
+
+  for (
+    const groupName in synonymGroups
+  ) {
+
+    const words =
+      synonymGroups[groupName];
+
+    let userHasTopic = false;
+    let storedHasTopic = false;
+
+
+    for (
+      const word of words
+    ) {
+
+      const cleanWord =
+        cleanText(word);
+
+
+      if (
+        userText.includes(cleanWord)
+      ) {
+
+        userHasTopic = true;
+
+      }
+
+
+      if (
+        storedText.includes(cleanWord)
+      ) {
+
+        storedHasTopic = true;
+
+      }
+
+    }
+
+
+    if (
+      userHasTopic &&
+      storedHasTopic
+    ) {
+
+      score += 7;
+
+    }
+
+  }
+
+  return score;
+
 }
 
 
@@ -244,45 +549,96 @@ function findBestFirebaseAnswer(
   const userWords =
     getImportantWords(question);
 
+
   let bestMatch = null;
+
   let highestScore = 0;
 
-  for (const item of information) {
+
+  for (
+    const item of information
+  ) {
 
     if (
       !item ||
       !item.question ||
       !item.answer
     ) {
+
       continue;
+
     }
 
+
     const storedQuestion =
-      cleanText(item.question);
+      cleanText(
+        item.question
+      );
+
 
     const storedWords =
-      getImportantWords(item.question);
+      getImportantWords(
+        item.question
+      );
+
 
     let score = 0;
 
 
-    // Exact phrase
+    // ======================================
+    // EXACT QUESTION MATCH
+    // ======================================
 
     if (
-      userText.includes(storedQuestion) ||
-      storedQuestion.includes(userText)
+      userText ===
+      storedQuestion
     ) {
 
-      score += 10;
+      score += 30;
 
     }
 
 
-    // Word matching
+    // ======================================
+    // PHRASE CONTAINMENT
+    // ======================================
 
-    for (const userWord of userWords) {
+    if (
+      userText.includes(
+        storedQuestion
+      )
+    ) {
 
-      for (const storedWord of storedWords) {
+      score += 15;
+
+    }
+
+
+    if (
+      storedQuestion.includes(
+        userText
+      )
+    ) {
+
+      score += 12;
+
+    }
+
+
+    // ======================================
+    // WORD MATCHING
+    // ======================================
+
+    let matchedWords = 0;
+
+
+    for (
+      const userWord of userWords
+    ) {
+
+      for (
+        const storedWord of storedWords
+      ) {
 
         if (
           wordsAreSimilar(
@@ -293,6 +649,10 @@ function findBestFirebaseAnswer(
 
           score += 3;
 
+          matchedWords++;
+
+          break;
+
         }
 
       }
@@ -300,15 +660,114 @@ function findBestFirebaseAnswer(
     }
 
 
-    // Category matching
+    // ======================================
+    // TOPIC MATCHING
+    // ======================================
 
-    if (item.category) {
+    score += topicsMatch(
+      userText,
+      storedQuestion
+    );
+
+
+    // ======================================
+    // CATEGORY MATCHING
+    // ======================================
+
+    if (
+      item.category
+    ) {
 
       const category =
-        cleanText(item.category);
+        cleanText(
+          item.category
+        );
+
 
       if (
-        userText.includes(category)
+        userText.includes(
+          category
+        )
+      ) {
+
+        score += 6;
+
+      }
+
+
+      // Category synonym support
+
+      for (
+        const groupName in synonymGroups
+      ) {
+
+        const words =
+          synonymGroups[groupName];
+
+
+        let categoryMatches =
+          false;
+
+
+        for (
+          const word of words
+        ) {
+
+          if (
+            category.includes(
+              cleanText(word)
+            ) &&
+            userText.includes(
+              cleanText(word)
+            )
+          ) {
+
+            categoryMatches = true;
+
+            break;
+
+          }
+
+        }
+
+
+        if (
+          categoryMatches
+        ) {
+
+          score += 5;
+
+        }
+
+      }
+
+    }
+
+
+    // ======================================
+    // MATCH QUALITY BONUS
+    // ======================================
+
+    if (
+      userWords.length > 0 &&
+      matchedWords > 0
+    ) {
+
+      const matchRatio =
+        matchedWords /
+        userWords.length;
+
+
+      if (
+        matchRatio >= 0.75
+      ) {
+
+        score += 8;
+
+      }
+
+      else if (
+        matchRatio >= 0.5
       ) {
 
         score += 4;
@@ -318,68 +777,39 @@ function findBestFirebaseAnswer(
     }
 
 
-    // Topic matching
-
-    const topicWords = [
-
-      "registration",
-      "exam",
-      "exams",
-      "examination",
-      "fees",
-      "fee",
-      "school",
-      "siwes",
-      "nacos",
-      "sug",
-      "sossa",
-      "department",
-      "computer",
-      "science",
-      "semester",
-      "result",
-      "results",
-      "admission",
-      "screening",
-      "clearance"
-
-    ];
-
-
-    for (const topic of topicWords) {
-
-      if (
-        userText.includes(topic) &&
-        storedQuestion.includes(topic)
-      ) {
-
-        score += 5;
-
-      }
-
-    }
-
+    // ======================================
+    // SAVE BEST MATCH
+    // ======================================
 
     if (
-      score > highestScore
+      score >
+      highestScore
     ) {
 
-      highestScore = score;
-      bestMatch = item;
+      highestScore =
+        score;
+
+      bestMatch =
+        item;
 
     }
 
   }
 
 
+  // ========================================
+  // REQUIRE A STRONG MATCH
+  // ========================================
+
   if (
     bestMatch &&
-    highestScore >= 3
+    highestScore >= 7
   ) {
 
     return (
 
       "📚 " +
+
       (
         bestMatch.category ||
         "GENERAL"
@@ -401,13 +831,14 @@ function findBestFirebaseAnswer(
 
   }
 
+
   return null;
 
 }
 
 
 // ==========================================
-// DEFAULT ANSWER
+// FIND DEFAULT ANSWER
 // ==========================================
 
 function findDefaultAnswer(
@@ -417,7 +848,9 @@ function findDefaultAnswer(
   const text =
     cleanText(question);
 
+
   let bestMatch = null;
+
   let highestScore = 0;
 
 
@@ -437,7 +870,9 @@ function findDefaultAnswer(
 
 
       if (
-        text.includes(cleanKeyword)
+        text.includes(
+          cleanKeyword
+        )
       ) {
 
         score +=
@@ -451,11 +886,15 @@ function findDefaultAnswer(
 
 
     if (
-      score > highestScore
+      score >
+      highestScore
     ) {
 
-      highestScore = score;
-      bestMatch = item;
+      highestScore =
+        score;
+
+      bestMatch =
+        item;
 
     }
 
@@ -490,7 +929,7 @@ async function findAnswer(
 
 
   // ========================================
-  // THANK YOU — CHECK FIRST
+  // THANK YOU
   // ========================================
 
   const thanksWords = [
@@ -508,14 +947,24 @@ async function findAnswer(
   ];
 
 
-  for (const phrase of thanksWords) {
+  for (
+    const phrase of thanksWords
+  ) {
 
-    if (text.includes(phrase)) {
+    if (
+      text.includes(
+        phrase
+      )
+    ) {
 
       return (
+
         "😊 You're always welcome!\n\n" +
+
         "I'm always here to help. " +
+
         "Is there anything else you'd like to know? 💎🤖"
+
       );
 
     }
@@ -524,7 +973,7 @@ async function findAnswer(
 
 
   // ========================================
-  // GREETINGS — CHECK FIRST
+  // GREETINGS
   // ========================================
 
   const greetings = [
@@ -539,11 +988,15 @@ async function findAnswer(
   ];
 
 
-  for (const greeting of greetings) {
+  for (
+    const greeting of greetings
+  ) {
 
     if (
       text === greeting ||
-      text.startsWith(greeting + " ")
+      text.startsWith(
+        greeting + " "
+      )
     ) {
 
       return (
@@ -551,10 +1004,13 @@ async function findAnswer(
         "👋 Hello! Welcome to Debryne Info.\n\n" +
 
         "I'm here to help you find verified information " +
+
         "about your school and department.\n\n" +
 
         "You can ask me about your school, " +
+
         "Computer Science, NACOS, SUG, SOSSA, " +
+
         "SIWES, registration, exams and more.\n\n" +
 
         "How can I help you today? 😊"
@@ -567,7 +1023,7 @@ async function findAnswer(
 
 
   // ========================================
-  // GOODBYE — CHECK FIRST
+  // GOODBYE
   // ========================================
 
   const goodbyeWords = [
@@ -581,9 +1037,15 @@ async function findAnswer(
   ];
 
 
-  for (const phrase of goodbyeWords) {
+  for (
+    const phrase of goodbyeWords
+  ) {
 
-    if (text.includes(phrase)) {
+    if (
+      text.includes(
+        phrase
+      )
+    ) {
 
       return (
 
@@ -615,7 +1077,9 @@ async function findAnswer(
     );
 
 
-  if (firebaseAnswer) {
+  if (
+    firebaseAnswer
+  ) {
 
     return firebaseAnswer;
 
@@ -627,10 +1091,14 @@ async function findAnswer(
   // ========================================
 
   const defaultAnswer =
-    findDefaultAnswer(question);
+    findDefaultAnswer(
+      question
+    );
 
 
-  if (defaultAnswer) {
+  if (
+    defaultAnswer
+  ) {
 
     return defaultAnswer;
 
@@ -644,21 +1112,35 @@ async function findAnswer(
   return (
 
     "🤔 I couldn't find a verified answer " +
+
     "to that question yet.\n\n" +
 
     "You can ask me about:\n\n" +
 
     "🏫 School\n" +
+
     "💻 Computer Science\n" +
+
     "🎓 NACOS\n" +
+
     "🏛️ SUG\n" +
+
     "🔬 SOSSA\n" +
+
     "🧑‍💻 SIWES\n" +
+
     "📝 Exams\n" +
+
     "📚 Registration\n" +
-    "💰 School Fees\n\n" +
+
+    "💰 School Fees\n" +
+
+    "🎓 Admission\n" +
+
+    "📊 Results\n\n" +
 
     "If you have another question, feel free " +
+
     "to ask me. 😊"
 
   );
@@ -681,8 +1163,17 @@ function addMessage(
     );
 
 
+  if (!chatBox) {
+
+    return;
+
+  }
+
+
   const message =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   message.className =
@@ -690,7 +1181,9 @@ function addMessage(
 
 
   const avatar =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   avatar.className =
@@ -704,7 +1197,9 @@ function addMessage(
 
 
   const bubble =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   bubble.className =
@@ -715,11 +1210,19 @@ function addMessage(
     text;
 
 
-  message.appendChild(avatar);
+  message.appendChild(
+    avatar
+  );
 
-  message.appendChild(bubble);
 
-  chatBox.appendChild(message);
+  message.appendChild(
+    bubble
+  );
+
+
+  chatBox.appendChild(
+    message
+  );
 
 
   const chatArea =
@@ -728,7 +1231,9 @@ function addMessage(
     );
 
 
-  if (chatArea) {
+  if (
+    chatArea
+  ) {
 
     chatArea.scrollTop =
       chatArea.scrollHeight;
@@ -750,8 +1255,17 @@ function showTyping() {
     );
 
 
+  if (!chatBox) {
+
+    return;
+
+  }
+
+
   const message =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   message.className =
@@ -775,7 +1289,9 @@ function showTyping() {
   `;
 
 
-  chatBox.appendChild(message);
+  chatBox.appendChild(
+    message
+  );
 
 
   const chatArea =
@@ -784,7 +1300,9 @@ function showTyping() {
     );
 
 
-  if (chatArea) {
+  if (
+    chatArea
+  ) {
 
     chatArea.scrollTop =
       chatArea.scrollHeight;
@@ -806,7 +1324,9 @@ function removeTyping() {
     );
 
 
-  if (typing) {
+  if (
+    typing
+  ) {
 
     typing.remove();
 
@@ -851,7 +1371,8 @@ async function sendQuestion() {
   );
 
 
-  input.value = "";
+  input.value =
+    "";
 
 
   showTyping();
@@ -874,7 +1395,9 @@ async function sendQuestion() {
     );
 
 
-  } catch (error) {
+  } catch (
+    error
+  ) {
 
     console.error(
       "ANSWER ERROR:",
@@ -941,14 +1464,17 @@ const input =
   );
 
 
-if (input) {
+if (
+  input
+) {
 
   input.addEventListener(
     "keydown",
     function(event) {
 
       if (
-        event.key === "Enter"
+        event.key ===
+        "Enter"
       ) {
 
         event.preventDefault();
