@@ -32,23 +32,24 @@ const defaultKnowledge = [
       "How can I help you today? 😊"
   },
 
-
   {
     keywords: [
       "thank you",
       "thanks",
       "thank u",
+      "thankyou",
       "thx",
+      "tnx",
       "i appreciate",
-      "appreciate you"
+      "appreciate you",
+      "much appreciated"
     ],
 
     answer:
       "😊 You're always welcome!\n\n" +
-      "I'm always here to help. Is there anything else " +
-      "you'd like to know? 💎🤖"
+      "I'm always here to help. " +
+      "Is there anything else you'd like to know? 💎🤖"
   },
-
 
   {
     keywords: [
@@ -82,13 +83,9 @@ async function getFirebaseInformation() {
     const snapshot =
       await get(informationRef);
 
-
     if (!snapshot.exists()) {
-
       return [];
-
     }
-
 
     return Object.values(snapshot.val());
 
@@ -100,9 +97,7 @@ async function getFirebaseInformation() {
     );
 
     return [];
-
   }
-
 }
 
 
@@ -206,44 +201,31 @@ function wordsAreSimilar(
 ) {
 
   if (word1 === word2) {
-
     return true;
-
   }
-
 
   if (
     word1.startsWith(word2) ||
     word2.startsWith(word1)
   ) {
-
     return true;
-
   }
-
 
   if (
     word1.endsWith("s") &&
     word1.slice(0, -1) === word2
   ) {
-
     return true;
-
   }
-
 
   if (
     word2.endsWith("s") &&
     word2.slice(0, -1) === word1
   ) {
-
     return true;
-
   }
 
-
   return false;
-
 }
 
 
@@ -263,9 +245,7 @@ function findBestFirebaseAnswer(
     getImportantWords(question);
 
   let bestMatch = null;
-
   let highestScore = 0;
-
 
   for (const item of information) {
 
@@ -274,11 +254,8 @@ function findBestFirebaseAnswer(
       !item.question ||
       !item.answer
     ) {
-
       continue;
-
     }
-
 
     const storedQuestion =
       cleanText(item.question);
@@ -290,6 +267,7 @@ function findBestFirebaseAnswer(
 
 
     // Exact phrase
+
     if (
       userText.includes(storedQuestion) ||
       storedQuestion.includes(userText)
@@ -301,6 +279,7 @@ function findBestFirebaseAnswer(
 
 
     // Word matching
+
     for (const userWord of userWords) {
 
       for (const storedWord of storedWords) {
@@ -322,6 +301,7 @@ function findBestFirebaseAnswer(
 
 
     // Category matching
+
     if (item.category) {
 
       const category =
@@ -339,6 +319,7 @@ function findBestFirebaseAnswer(
 
 
     // Topic matching
+
     const topicWords = [
 
       "registration",
@@ -384,7 +365,6 @@ function findBestFirebaseAnswer(
     ) {
 
       highestScore = score;
-
       bestMatch = item;
 
     }
@@ -400,7 +380,6 @@ function findBestFirebaseAnswer(
     return (
 
       "📚 " +
-
       (
         bestMatch.category ||
         "GENERAL"
@@ -422,7 +401,6 @@ function findBestFirebaseAnswer(
 
   }
 
-
   return null;
 
 }
@@ -440,7 +418,6 @@ function findDefaultAnswer(
     cleanText(question);
 
   let bestMatch = null;
-
   let highestScore = 0;
 
 
@@ -478,7 +455,6 @@ function findDefaultAnswer(
     ) {
 
       highestScore = score;
-
       bestMatch = item;
 
     }
@@ -509,7 +485,125 @@ async function findAnswer(
   question
 ) {
 
-  // Firebase information comes first
+  const text =
+    cleanText(question);
+
+
+  // ========================================
+  // THANK YOU — CHECK FIRST
+  // ========================================
+
+  const thanksWords = [
+
+    "thank you",
+    "thanks",
+    "thank u",
+    "thankyou",
+    "thx",
+    "tnx",
+    "i appreciate",
+    "appreciate you",
+    "much appreciated"
+
+  ];
+
+
+  for (const phrase of thanksWords) {
+
+    if (text.includes(phrase)) {
+
+      return (
+        "😊 You're always welcome!\n\n" +
+        "I'm always here to help. " +
+        "Is there anything else you'd like to know? 💎🤖"
+      );
+
+    }
+
+  }
+
+
+  // ========================================
+  // GREETINGS — CHECK FIRST
+  // ========================================
+
+  const greetings = [
+
+    "hello",
+    "hi",
+    "hey",
+    "good morning",
+    "good afternoon",
+    "good evening"
+
+  ];
+
+
+  for (const greeting of greetings) {
+
+    if (
+      text === greeting ||
+      text.startsWith(greeting + " ")
+    ) {
+
+      return (
+
+        "👋 Hello! Welcome to Debryne Info.\n\n" +
+
+        "I'm here to help you find verified information " +
+        "about your school and department.\n\n" +
+
+        "You can ask me about your school, " +
+        "Computer Science, NACOS, SUG, SOSSA, " +
+        "SIWES, registration, exams and more.\n\n" +
+
+        "How can I help you today? 😊"
+
+      );
+
+    }
+
+  }
+
+
+  // ========================================
+  // GOODBYE — CHECK FIRST
+  // ========================================
+
+  const goodbyeWords = [
+
+    "bye",
+    "goodbye",
+    "see you",
+    "see u",
+    "good night"
+
+  ];
+
+
+  for (const phrase of goodbyeWords) {
+
+    if (text.includes(phrase)) {
+
+      return (
+
+        "👋 Goodbye!\n\n" +
+
+        "Have a great day! Feel free to come back " +
+
+        "whenever you need verified information. 💎❤️"
+
+      );
+
+    }
+
+  }
+
+
+  // ========================================
+  // FIREBASE VERIFIED INFORMATION
+  // ========================================
+
   const firebaseInformation =
     await getFirebaseInformation();
 
@@ -528,11 +622,12 @@ async function findAnswer(
   }
 
 
-  // Default conversational answers
+  // ========================================
+  // DEFAULT KNOWLEDGE
+  // ========================================
+
   const defaultAnswer =
-    findDefaultAnswer(
-      question
-    );
+    findDefaultAnswer(question);
 
 
   if (defaultAnswer) {
@@ -542,7 +637,10 @@ async function findAnswer(
   }
 
 
-  // Unknown question
+  // ========================================
+  // UNKNOWN QUESTION
+  // ========================================
+
   return (
 
     "🤔 I couldn't find a verified answer " +
@@ -586,6 +684,7 @@ function addMessage(
   const message =
     document.createElement("div");
 
+
   message.className =
     `message ${type}`;
 
@@ -593,8 +692,10 @@ function addMessage(
   const avatar =
     document.createElement("div");
 
+
   avatar.className =
     "avatar";
+
 
   avatar.textContent =
     type === "bot"
@@ -605,8 +706,10 @@ function addMessage(
   const bubble =
     document.createElement("div");
 
+
   bubble.className =
     "bubble";
+
 
   bubble.innerText =
     text;
@@ -650,8 +753,10 @@ function showTyping() {
   const message =
     document.createElement("div");
 
+
   message.className =
     "message bot";
+
 
   message.id =
     "typingMessage";
@@ -784,6 +889,7 @@ async function sendQuestion() {
 
       "❌ I couldn't connect to the " +
       "information database right now.\n\n" +
+
       "Please try again later. 😊",
 
       "bot"
@@ -863,6 +969,7 @@ if (input) {
 
 window.sendQuestion =
   sendQuestion;
+
 
 window.askQuestion =
   askQuestion;
