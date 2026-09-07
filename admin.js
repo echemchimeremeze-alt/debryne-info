@@ -1,45 +1,153 @@
-import { database, auth } from "./firebase.js";
+// ==========================================
+// DEBRYNE INFO - ADMIN PANEL
+// ==========================================
+
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
 import {
+  getAuth,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+} from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
+  getDatabase,
   ref,
   push,
   set
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+} from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
+
+// ==========================================
+// FIREBASE CONFIG
+// ==========================================
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyDsUurd58zq5ltauZiDA4J3k_UR5JMI5Gs",
+
+  authDomain:
+    "debryne-info.firebaseapp.com",
+
+  databaseURL:
+    "https://debryne-info-default-rtdb.firebaseio.com/",
+
+  projectId:
+    "debryne-info",
+
+  storageBucket:
+    "debryne-info.firebasestorage.app",
+
+  messagingSenderId:
+    "505266636991",
+
+  appId:
+    "1:505266636991:web:e2a47f69524af12f6bde0a",
+
+  measurementId:
+    "G-2D9QNNQL69"
+
+};
+
+
+// ==========================================
+// INITIALIZE FIREBASE
+// ==========================================
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const database = getDatabase(app);
+
+
+// ==========================================
+// WAIT FOR PAGE
+// ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const loginScreen = document.getElementById("loginScreen");
-  const dashboard = document.getElementById("dashboard");
+  const loginScreen =
+    document.getElementById("loginScreen");
 
-  const loginButton = document.getElementById("loginButton");
-  const logoutButton = document.getElementById("logoutButton");
+  const dashboard =
+    document.getElementById("dashboard");
 
-  const loginStatus = document.getElementById("loginStatus");
-  const saveButton = document.getElementById("saveButton");
-  const status = document.getElementById("status");
+  const loginButton =
+    document.getElementById("loginButton");
+
+  const logoutButton =
+    document.getElementById("logoutButton");
+
+  const loginStatus =
+    document.getElementById("loginStatus");
+
+  const saveButton =
+    document.getElementById("saveButton");
+
+  const status =
+    document.getElementById("status");
 
 
+  // ========================================
+  // CHECK ELEMENTS
+  // ========================================
+
+  if (!loginButton) {
+
+    alert("Debryne Info Admin: Login button not found.");
+
+    return;
+
+  }
+
+
+  // ========================================
   // LOGIN
+  // ========================================
+
   loginButton.addEventListener("click", async () => {
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+    const email =
+      document.getElementById("email").value.trim();
 
-    if (!email || !password) {
+    const password =
+      document.getElementById("password").value;
+
+
+    if (!email) {
+
       loginStatus.textContent =
-        "⚠️ Please enter your email and password.";
+        "⚠️ Please enter your admin email.";
+
       return;
+
     }
 
+
+    if (!password) {
+
+      loginStatus.textContent =
+        "⚠️ Please enter your password.";
+
+      return;
+
+    }
+
+
     loginButton.disabled = true;
-    loginButton.textContent = "⏳ Logging in...";
+
+    loginButton.textContent =
+      "⏳ Logging in...";
+
+    loginStatus.textContent =
+      "";
+
 
     try {
 
@@ -49,131 +157,243 @@ document.addEventListener("DOMContentLoaded", () => {
         password
       );
 
+
       loginStatus.textContent =
         "✅ Login successful!";
 
+
     } catch (error) {
 
-      console.error("LOGIN ERROR:", error);
+      console.error(
+        "DEBRYNE LOGIN ERROR:",
+        error
+      );
 
-      loginStatus.textContent =
-        "❌ " + error.message;
+
+      if (
+        error.code ===
+        "auth/invalid-credential"
+      ) {
+
+        loginStatus.textContent =
+          "❌ Wrong email or password.";
+
+      } else if (
+        error.code ===
+        "auth/user-not-found"
+      ) {
+
+        loginStatus.textContent =
+          "❌ Admin account not found.";
+
+      } else if (
+        error.code ===
+        "auth/wrong-password"
+      ) {
+
+        loginStatus.textContent =
+          "❌ Wrong password.";
+
+      } else if (
+        error.code ===
+        "auth/invalid-email"
+      ) {
+
+        loginStatus.textContent =
+          "❌ Invalid email address.";
+
+      } else {
+
+        loginStatus.textContent =
+          "❌ " + error.message;
+
+      }
+
 
       loginButton.disabled = false;
-      loginButton.textContent = "🔐 Login";
-    }
 
-  });
-
-
-  // CHECK LOGIN
-  onAuthStateChanged(auth, (user) => {
-
-    if (user) {
-
-      loginScreen.style.display = "none";
-      dashboard.style.display = "block";
-
-    } else {
-
-      loginScreen.style.display = "flex";
-      dashboard.style.display = "none";
+      loginButton.textContent =
+        "🔐 Login";
 
     }
 
   });
 
 
+  // ========================================
+  // LOGIN STATE
+  // ========================================
+
+  onAuthStateChanged(
+    auth,
+    (user) => {
+
+      if (user) {
+
+        loginScreen.style.display =
+          "none";
+
+        dashboard.style.display =
+          "block";
+
+      } else {
+
+        loginScreen.style.display =
+          "flex";
+
+        dashboard.style.display =
+          "none";
+
+      }
+
+    }
+  );
+
+
+  // ========================================
   // LOGOUT
-  logoutButton.addEventListener("click", async () => {
+  // ========================================
 
-    try {
+  if (logoutButton) {
 
-      await signOut(auth);
+    logoutButton.addEventListener(
+      "click",
+      async () => {
 
-    } catch (error) {
+        try {
 
-      console.error("LOGOUT ERROR:", error);
+          await signOut(auth);
 
-    }
+        } catch (error) {
 
-  });
+          console.error(
+            "LOGOUT ERROR:",
+            error
+          );
+
+        }
+
+      }
+    );
+
+  }
 
 
+  // ========================================
   // SAVE INFORMATION
-  saveButton.addEventListener("click", async () => {
+  // ========================================
 
-    const category =
-      document.getElementById("category").value;
+  if (saveButton) {
 
-    const question =
-      document.getElementById("question").value.trim();
+    saveButton.addEventListener(
+      "click",
+      async () => {
 
-    const answer =
-      document.getElementById("answer").value.trim();
+        const category =
+          document.getElementById("category").value;
 
+        const question =
+          document
+            .getElementById("question")
+            .value
+            .trim();
 
-    if (!question || !answer) {
-
-      status.textContent =
-        "⚠️ Enter both the question and answer.";
-
-      return;
-
-    }
-
-
-    saveButton.disabled = true;
-    saveButton.textContent = "⏳ Saving...";
+        const answer =
+          document
+            .getElementById("answer")
+            .value
+            .trim();
 
 
-    try {
+        if (!question || !answer) {
 
-      const informationRef =
-        push(ref(database, "information"));
+          status.textContent =
+            "⚠️ Enter both the question and answer.";
 
+          return;
 
-      await set(informationRef, {
-
-        category: category,
-
-        question: question,
-
-        answer: answer,
-
-        createdAt:
-          new Date().toISOString(),
-
-        createdBy:
-          auth.currentUser
-            ? auth.currentUser.email
-            : "Admin"
-
-      });
+        }
 
 
-      status.textContent =
-        "✅ Information saved successfully!";
+        saveButton.disabled = true;
+
+        saveButton.textContent =
+          "⏳ Saving...";
 
 
-      document.getElementById("question").value = "";
-      document.getElementById("answer").value = "";
+        try {
+
+          const informationRef =
+            push(
+              ref(
+                database,
+                "information"
+              )
+            );
 
 
-    } catch (error) {
+          await set(
+            informationRef,
+            {
 
-      console.error("SAVE ERROR:", error);
+              category:
+                category,
 
-      status.textContent =
-        "❌ Save failed: " + error.message;
+              question:
+                question,
 
-    }
+              answer:
+                answer,
+
+              createdAt:
+                new Date().toISOString(),
+
+              createdBy:
+                auth.currentUser
+                  ? auth.currentUser.email
+                  : "Admin"
+
+            }
+          );
 
 
-    saveButton.disabled = false;
-    saveButton.textContent =
-      "💾 Save Information";
+          status.textContent =
+            "✅ Information saved successfully!";
 
-  });
+
+          document.getElementById(
+            "question"
+          ).value = "";
+
+
+          document.getElementById(
+            "answer"
+          ).value = "";
+
+
+        } catch (error) {
+
+          console.error(
+            "SAVE ERROR:",
+            error
+          );
+
+
+          status.textContent =
+            "❌ Save failed: " +
+            error.message;
+
+        }
+
+
+        saveButton.disabled = false;
+
+        saveButton.textContent =
+          "💾 Save Information";
+
+      }
+    );
+
+  }
 
 });
