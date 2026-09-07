@@ -115,6 +115,9 @@
           <option value="exams">📝 Exams</option>
           <option value="fees">💰 School Fees</option>
           <option value="general">📢 General</option>
+          <option value="registration">📚 Registration</option>
+          <option value="admission">🎓 Admission</option>
+          <option value="results">📊 Results</option>
 
         </select>
 
@@ -172,7 +175,7 @@
 </div>
 
 
-<!-- FIREBASE LOGIN CODE -->
+<!-- FIREBASE -->
 
 <script type="module">
 
@@ -187,6 +190,16 @@ import {
 } from
 "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+import {
+  getDatabase,
+  ref,
+  push,
+  set
+} from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+
+/* FIREBASE CONFIG */
 
 const firebaseConfig = {
 
@@ -217,10 +230,16 @@ const firebaseConfig = {
 };
 
 
+/* INITIALIZE FIREBASE */
+
 const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
 
+const database = getDatabase(app);
+
+
+/* ELEMENTS */
 
 const loginScreen =
   document.getElementById("loginScreen");
@@ -237,8 +256,25 @@ const logoutButton =
 const loginStatus =
   document.getElementById("loginStatus");
 
+const saveButton =
+  document.getElementById("saveButton");
 
-/* LOGIN */
+const status =
+  document.getElementById("status");
+
+const categoryInput =
+  document.getElementById("category");
+
+const questionInput =
+  document.getElementById("question");
+
+const answerInput =
+  document.getElementById("answer");
+
+
+/* =========================
+   LOGIN
+========================= */
 
 loginButton.addEventListener(
   "click",
@@ -299,7 +335,9 @@ loginButton.addEventListener(
 );
 
 
-/* CHECK LOGIN */
+/* =========================
+   CHECK LOGIN
+========================= */
 
 onAuthStateChanged(
   auth,
@@ -327,13 +365,165 @@ onAuthStateChanged(
 );
 
 
-/* LOGOUT */
+/* =========================
+   SAVE INFORMATION
+========================= */
+
+saveButton.addEventListener(
+  "click",
+  async function() {
+
+    const user = auth.currentUser;
+
+    if (!user) {
+
+      status.textContent =
+        "❌ Please log in first.";
+
+      return;
+
+    }
+
+
+    const category =
+      categoryInput.value.trim();
+
+    const question =
+      questionInput.value.trim();
+
+    const answer =
+      answerInput.value.trim();
+
+
+    /* VALIDATION */
+
+    if (!category) {
+
+      status.textContent =
+        "⚠️ Please select a category.";
+
+      return;
+
+    }
+
+
+    if (!question) {
+
+      status.textContent =
+        "⚠️ Please enter a question.";
+
+      questionInput.focus();
+
+      return;
+
+    }
+
+
+    if (!answer) {
+
+      status.textContent =
+        "⚠️ Please enter the verified answer.";
+
+      answerInput.focus();
+
+      return;
+
+    }
+
+
+    /* BUTTON LOADING */
+
+    saveButton.disabled = true;
+
+    saveButton.textContent =
+      "⏳ Saving...";
+
+
+    try {
+
+      /* CREATE NEW DATABASE ENTRY */
+
+      const informationRef =
+        push(ref(database, "information"));
+
+
+      await set(
+        informationRef,
+        {
+
+          category: category,
+
+          question: question,
+
+          answer: answer,
+
+          createdAt: Date.now(),
+
+          createdBy: user.email || "Admin"
+
+        }
+      );
+
+
+      /* SUCCESS */
+
+      status.textContent =
+        "✅ Information saved successfully!";
+
+
+      /* CLEAR FORM */
+
+      questionInput.value = "";
+
+      answerInput.value = "";
+
+
+    } catch (error) {
+
+      console.error(
+        "SAVE ERROR:",
+        error
+      );
+
+
+      status.textContent =
+        "❌ Failed to save information: " +
+        error.message;
+
+    }
+
+
+    /* RESTORE BUTTON */
+
+    saveButton.disabled = false;
+
+    saveButton.textContent =
+      "💾 Save Information";
+
+  }
+);
+
+
+/* =========================
+   LOGOUT
+========================= */
 
 logoutButton.addEventListener(
   "click",
   async function() {
 
-    await signOut(auth);
+    try {
+
+      await signOut(auth);
+
+    } catch (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+    }
 
   }
 );
@@ -341,4 +531,5 @@ logoutButton.addEventListener(
 </script>
 
 </body>
-  </html>
+
+</html>
