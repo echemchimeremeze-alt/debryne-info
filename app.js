@@ -6,17 +6,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
 
-// ==========================================
-// DEBRYNE INFO — SMART STUDENT ASSISTANT
-// ==========================================
-
-
-// ==========================================
-// DEFAULT CONVERSATIONAL KNOWLEDGE
-// ==========================================
+/* =========================================================
+   DEFAULT CONVERSATIONAL KNOWLEDGE
+   These are only basic conversation responses.
+   School information MUST come from Firebase.
+========================================================= */
 
 const defaultKnowledge = [
-
   {
     keywords: [
       "hello",
@@ -34,7 +30,7 @@ const defaultKnowledge = [
       "about your school and department.\n\n" +
       "You can ask me about school activities, " +
       "Computer Science, NACOS, SUG, SOSSA, SIWES, " +
-      "registration, exams and more.\n\n" +
+      "registration, admission, exams and more.\n\n" +
       "How can I help you today? 😊"
   },
 
@@ -71,13 +67,12 @@ const defaultKnowledge = [
       "Have a great day! Feel free to come back " +
       "whenever you need verified information. 💎❤️"
   }
-
 ];
 
 
-// ==========================================
-// GET FIREBASE INFORMATION
-// ==========================================
+/* =========================================================
+   LOAD INFORMATION FROM FIREBASE
+========================================================= */
 
 async function getFirebaseInformation() {
 
@@ -90,9 +85,7 @@ async function getFirebaseInformation() {
       await get(informationRef);
 
     if (!snapshot.exists()) {
-
       return [];
-
     }
 
     return Object.values(snapshot.val());
@@ -105,15 +98,13 @@ async function getFirebaseInformation() {
     );
 
     return [];
-
   }
-
 }
 
 
-// ==========================================
-// CLEAN TEXT
-// ==========================================
+/* =========================================================
+   TEXT CLEANING
+========================================================= */
 
 function cleanText(text) {
 
@@ -122,141 +113,12 @@ function cleanText(text) {
     .replace(/[^\w\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-
 }
 
 
-// ==========================================
-// SYNONYMS / WORD GROUPS
-// ==========================================
-
-const synonymGroups = {
-
-  registration: [
-    "registration",
-    "register",
-    "registered",
-    "registration process",
-    "course registration",
-    "course reg"
-  ],
-
-  exam: [
-    "exam",
-    "exams",
-    "examination",
-    "examinations",
-    "test",
-    "tests"
-  ],
-
-  fee: [
-    "fee",
-    "fees",
-    "school fee",
-    "school fees",
-    "payment",
-    "payments"
-  ],
-
-  result: [
-    "result",
-    "results",
-    "result checker",
-    "academic result"
-  ],
-
-  admission: [
-    "admission",
-    "admissions",
-    "post utme",
-    "screening",
-    "entrance"
-  ],
-
-  clearance: [
-    "clearance",
-    "clearing",
-    "clear"
-  ],
-
-  department: [
-    "department",
-    "dept",
-    "course",
-    "programme",
-    "program"
-  ],
-
-  computerScience: [
-    "computer science",
-    "computer",
-    "cs",
-    "computing"
-  ],
-
-  siwes: [
-    "siwes",
-    "industrial training",
-    "it",
-    "industrial attachment",
-    "student industrial work experience"
-  ],
-
-  nacos: [
-    "nacos",
-    "computer society",
-    "computer students association"
-  ],
-
-  sug: [
-    "sug",
-    "student union",
-    "student union government"
-  ],
-
-  sossa: [
-    "sossa",
-    "school of science",
-    "science students association"
-  ],
-
-  semester: [
-    "semester",
-    "session",
-    "academic semester"
-  ],
-
-  deadline: [
-    "deadline",
-    "closing date",
-    "closing",
-    "last day",
-    "due date",
-    "final date",
-    "ends",
-    "end date"
-  ],
-
-  timetable: [
-    "timetable",
-    "schedule",
-    "calendar",
-    "programme schedule"
-  ],
-
-  date: [
-    "date",
-    "day",
-    "when"
-  ]
-
-};
-
-
-// ==========================================
-// STOP WORDS
-// ==========================================
+/* =========================================================
+   WORDS THAT SHOULD NOT AFFECT MATCHING
+========================================================= */
 
 const stopWords = new Set([
 
@@ -267,251 +129,499 @@ const stopWords = new Set([
   "are",
   "was",
   "were",
+
   "when",
   "what",
   "where",
   "who",
   "how",
   "why",
+
   "can",
   "could",
   "would",
   "should",
+
   "do",
   "does",
   "did",
+
   "will",
   "may",
   "might",
+
   "please",
+
   "tell",
   "me",
   "about",
+
   "for",
   "to",
   "of",
   "in",
   "on",
   "at",
+
   "and",
   "or",
+
   "my",
   "your",
   "i",
   "we",
   "you",
   "they",
+
   "it",
+
   "be",
   "from",
   "this",
   "that",
   "with",
+
   "has",
   "have",
   "had",
   "been",
+
   "there",
   "any",
   "some",
   "more",
   "much",
-  "please"
 
+  "please"
 ]);
 
 
-// ==========================================
-// IMPORTANT WORDS
-// ==========================================
+/* =========================================================
+   IMPORTANT WORDS
+========================================================= */
 
 function getImportantWords(text) {
 
   return cleanText(text)
     .split(" ")
-    .filter(word =>
-      word.length > 2 &&
-      !stopWords.has(word)
+    .filter(
+      word =>
+        word.length > 2 &&
+        !stopWords.has(word)
     );
 
 }
 
 
-// ==========================================
-// FIND SYNONYM GROUP
-// ==========================================
+/* =========================================================
+   INTENT DEFINITIONS
+=========================================================
 
-function getSynonymGroup(word) {
+   This is the important upgrade.
 
-  const cleanWord =
-    cleanText(word);
+   Debryne Info now understands the PURPOSE of a question,
+   not just the words inside it.
+========================================================= */
+
+const intents = {
+
+  registrationStatus: {
+
+    phrases: [
+      "has registration started",
+      "is registration open",
+      "is registration ongoing",
+      "is registration available",
+      "can i register now",
+      "can we register now",
+      "can students register",
+      "are we registering",
+      "registration open now"
+    ],
+
+    words: [
+      "started",
+      "open",
+      "ongoing",
+      "available",
+      "register",
+      "now"
+    ]
+
+  },
+
+
+  registrationStart: {
+
+    phrases: [
+      "when will registration start",
+      "when does registration start",
+      "when is registration starting",
+      "when will registration begin",
+      "when does registration begin",
+      "registration commencement",
+      "registration starting date",
+      "registration start date"
+    ],
+
+    words: [
+      "when",
+      "start",
+      "starting",
+      "begin",
+      "beginning",
+      "commencement"
+    ]
+
+  },
+
+
+  registrationDeadline: {
+
+    phrases: [
+      "when is registration closing",
+      "when does registration close",
+      "when will registration close",
+      "when is registration ending",
+      "when does registration end",
+      "registration closing date",
+      "registration deadline",
+      "last day for registration",
+      "last day to register"
+    ],
+
+    words: [
+      "closing",
+      "close",
+      "closing",
+      "ending",
+      "end",
+      "deadline",
+      "last",
+      "due"
+    ]
+
+  },
+
+
+  admissionForm: {
+
+    phrases: [
+      "is the admission form available",
+      "is the admission form ongoing",
+      "is admission form still available",
+      "is admission form still ongoing",
+      "can i get the admission form",
+      "can i still get the form",
+      "is the form still available",
+      "is form picking ongoing",
+      "is form picking still ongoing",
+      "when is form picking"
+    ],
+
+    words: [
+      "admission",
+      "form",
+      "picking",
+      "applying",
+      "application"
+    ]
+
+  },
+
+
+  admissionDeadline: {
+
+    phrases: [
+      "when is admission form closing",
+      "when does admission form close",
+      "when is the admission deadline",
+      "when is the application deadline",
+      "last day to get the form",
+      "last day for admission form"
+    ],
+
+    words: [
+      "admission",
+      "form",
+      "deadline",
+      "closing",
+      "close",
+      "last"
+    ]
+
+  },
+
+
+  examDate: {
+
+    phrases: [
+      "when is the exam",
+      "when are exams",
+      "when is the next exam",
+      "exam date",
+      "examination date",
+      "when will exams start",
+      "when does exam start"
+    ],
+
+    words: [
+      "exam",
+      "examination",
+      "test",
+      "date",
+      "start"
+    ]
+
+  },
+
+
+  examDeadline: {
+
+    phrases: [
+      "when will exams end",
+      "when do exams end",
+      "when are exams ending",
+      "last day of exams",
+      "exam closing date"
+    ],
+
+    words: [
+      "exam",
+      "examination",
+      "end",
+      "ending",
+      "last"
+    ]
+
+  },
+
+
+  fees: {
+
+    phrases: [
+      "how much is school fees",
+      "how much are school fees",
+      "what is the school fee",
+      "what are the school fees",
+      "school fees amount",
+      "school fee amount",
+      "how much do i pay"
+    ],
+
+    words: [
+      "fees",
+      "fee",
+      "school",
+      "payment",
+      "amount"
+    ]
+
+  },
+
+
+  result: {
+
+    phrases: [
+      "when will results be released",
+      "when is result coming out",
+      "how do i check my result",
+      "where can i check my result",
+      "result checker",
+      "academic result"
+    ],
+
+    words: [
+      "result",
+      "results",
+      "checker",
+      "released",
+      "check"
+    ]
+
+  },
+
+
+  siwes: {
+
+    phrases: [
+      "tell me about siwes",
+      "what is siwes",
+      "when is siwes",
+      "siwes information",
+      "industrial training",
+      "industrial attachment"
+    ],
+
+    words: [
+      "siwes",
+      "industrial",
+      "training",
+      "attachment"
+    ]
+
+  },
+
+
+  nacos: {
+
+    phrases: [
+      "tell me about nacos",
+      "what is nacos",
+      "nacos information",
+      "nacos update",
+      "computer society"
+    ],
+
+    words: [
+      "nacos",
+      "computer",
+      "society"
+    ]
+
+  },
+
+
+  sug: {
+
+    phrases: [
+      "tell me about sug",
+      "what is sug",
+      "sug information",
+      "sug update",
+      "student union"
+    ],
+
+    words: [
+      "sug",
+      "union",
+      "student"
+    ]
+
+  },
+
+
+  sossa: {
+
+    phrases: [
+      "tell me about sossa",
+      "what is sossa",
+      "sossa information",
+      "sossa update",
+      "school of science students association"
+    ],
+
+    words: [
+      "sossa",
+      "science",
+      "students",
+      "association"
+    ]
+
+  },
+
+
+  department: {
+
+    phrases: [
+      "tell me about computer science",
+      "computer science department",
+      "information about computer science",
+      "what is computer science",
+      "computer science information"
+    ],
+
+    words: [
+      "computer",
+      "science",
+      "department"
+    ]
+
+  }
+
+};
+
+
+/* =========================================================
+   DETECT USER INTENT
+========================================================= */
+
+function detectIntent(question) {
+
+  const text =
+    cleanText(question);
+
+  let bestIntent = null;
+
+  let highestScore = 0;
+
 
   for (
-    const groupName in synonymGroups
+    const intentName in intents
   ) {
 
-    const words =
-      synonymGroups[groupName];
+    const intent =
+      intents[intentName];
 
-    for (const synonym of words) {
+    let score = 0;
+
+
+    /* EXACT PHRASE MATCH */
+
+    for (
+      const phrase of intent.phrases
+    ) {
+
+      const cleanPhrase =
+        cleanText(phrase);
 
       if (
-        cleanWord ===
-        cleanText(synonym)
+        text === cleanPhrase
       ) {
 
-        return groupName;
+        score += 30;
+
+      }
+
+      else if (
+        text.includes(cleanPhrase)
+      ) {
+
+        score += 18;
 
       }
 
     }
 
-  }
 
-  return null;
+    /* WORD MATCH */
 
-}
-
-
-// ==========================================
-// CHECK SYNONYM MATCH
-// ==========================================
-
-function synonymsMatch(
-  word1,
-  word2
-) {
-
-  const group1 =
-    getSynonymGroup(word1);
-
-  const group2 =
-    getSynonymGroup(word2);
-
-  if (
-    group1 &&
-    group2 &&
-    group1 === group2
-  ) {
-
-    return true;
-
-  }
-
-  return false;
-
-}
-
-
-// ==========================================
-// WORD SIMILARITY
-// ==========================================
-
-function wordsAreSimilar(
-  word1,
-  word2
-) {
-
-  if (
-    word1 === word2
-  ) {
-
-    return true;
-
-  }
-
-
-  if (
-    synonymsMatch(
-      word1,
-      word2
-    )
-  ) {
-
-    return true;
-
-  }
-
-
-  if (
-    word1.startsWith(word2) ||
-    word2.startsWith(word1)
-  ) {
-
-    return true;
-
-  }
-
-
-  if (
-    word1.endsWith("s") &&
-    word1.slice(0, -1) === word2
-  ) {
-
-    return true;
-
-  }
-
-
-  if (
-    word2.endsWith("s") &&
-    word2.slice(0, -1) === word1
-  ) {
-
-    return true;
-
-  }
-
-
-  return false;
-
-}
-
-
-// ==========================================
-// CHECK TOPIC MATCH
-// ==========================================
-
-function topicsMatch(
-  userText,
-  storedText
-) {
-
-  let score = 0;
-
-  for (
-    const groupName in synonymGroups
-  ) {
-
-    const words =
-      synonymGroups[groupName];
-
-    let userHasTopic = false;
-    let storedHasTopic = false;
+    const userWords =
+      getImportantWords(question);
 
 
     for (
-      const word of words
+      const intentWord of intent.words
     ) {
 
-      const cleanWord =
-        cleanText(word);
+      const cleanIntentWord =
+        cleanText(intentWord);
 
-
-      if (
-        userText.includes(cleanWord)
+      for (
+        const userWord of userWords
       ) {
 
-        userHasTopic = true;
+        if (
+          userWord === cleanIntentWord ||
+          userWord.startsWith(cleanIntentWord) ||
+          cleanIntentWord.startsWith(userWord)
+        ) {
 
-      }
+          score += 3;
 
+          break;
 
-      if (
-        storedText.includes(cleanWord)
-      ) {
-
-        storedHasTopic = true;
+        }
 
       }
 
@@ -519,26 +629,428 @@ function topicsMatch(
 
 
     if (
-      userHasTopic &&
-      storedHasTopic
+      score > highestScore
     ) {
 
-      score += 7;
+      highestScore =
+        score;
+
+      bestIntent =
+        intentName;
 
     }
 
   }
+
+
+  /*
+     Only return an intent when there is
+     enough evidence.
+  */
+
+  if (
+    bestIntent &&
+    highestScore >= 6
+  ) {
+
+    return bestIntent;
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =========================================================
+   FIREBASE ITEM INTENT MATCHING
+========================================================= */
+
+function firebaseItemMatchesIntent(
+  item,
+  intentName
+) {
+
+  if (!item) {
+    return false;
+  }
+
+
+  const question =
+    cleanText(item.question);
+
+
+  const answer =
+    cleanText(item.answer);
+
+
+  const category =
+    cleanText(item.category);
+
+
+  /*
+     Combine the stored information.
+
+     This allows the admin to save:
+
+     Question:
+     "Has registration started?"
+
+     Category:
+     "Registration"
+
+     Answer:
+     "Registration has not started..."
+
+     and still have Debryne Info understand it.
+  */
+
+  const storedText =
+    question +
+    " " +
+    answer +
+    " " +
+    category;
+
+
+  const intent =
+    intents[intentName];
+
+
+  if (!intent) {
+    return false;
+  }
+
+
+  let score = 0;
+
+
+  /* PHRASE MATCH */
+
+  for (
+    const phrase of intent.phrases
+  ) {
+
+    const cleanPhrase =
+      cleanText(phrase);
+
+
+    if (
+      question.includes(cleanPhrase)
+    ) {
+
+      score += 20;
+
+    }
+
+
+    if (
+      storedText.includes(cleanPhrase)
+    ) {
+
+      score += 5;
+
+    }
+
+  }
+
+
+  /* INTENT WORD MATCH */
+
+  for (
+    const intentWord of intent.words
+  ) {
+
+    const word =
+      cleanText(intentWord);
+
+
+    if (
+      question.includes(word)
+    ) {
+
+      score += 5;
+
+    }
+
+
+    else if (
+      storedText.includes(word)
+    ) {
+
+      score += 2;
+
+    }
+
+  }
+
+
+  /*
+     CATEGORY BONUS
+
+     Registration information gets priority
+     for registration intents.
+  */
+
+  if (
+    intentName.startsWith(
+      "registration"
+    )
+  ) {
+
+    if (
+      category === "registration"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName.startsWith(
+      "admission"
+    )
+  ) {
+
+    if (
+      category === "admission"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName.startsWith(
+      "exam"
+    )
+  ) {
+
+    if (
+      category === "exams"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName === "fees"
+  ) {
+
+    if (
+      category === "fees"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName === "siwes"
+  ) {
+
+    if (
+      category === "siwes"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName === "nacos"
+  ) {
+
+    if (
+      category === "nacos"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName === "sug"
+  ) {
+
+    if (
+      category === "sug"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName === "sossa"
+  ) {
+
+    if (
+      category === "sossa"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
+
+  if (
+    intentName === "department"
+  ) {
+
+    if (
+      category === "department"
+    ) {
+
+      score += 15;
+
+    }
+
+  }
+
 
   return score;
 
 }
 
 
-// ==========================================
-// FIND BEST FIREBASE ANSWER
-// ==========================================
+/* =========================================================
+   FIND ANSWER USING INTENT
+========================================================= */
 
-function findBestFirebaseAnswer(
+function findAnswerByIntent(
+  question,
+  information
+) {
+
+  const intent =
+    detectIntent(question);
+
+
+  /*
+     If we cannot confidently identify
+     the intent, don't guess.
+  */
+
+  if (!intent) {
+    return null;
+  }
+
+
+  let bestMatch = null;
+
+  let highestScore = 0;
+
+
+  for (
+    const item of information
+  ) {
+
+    if (
+      !item ||
+      !item.question ||
+      !item.answer
+    ) {
+
+      continue;
+
+    }
+
+
+    const score =
+      firebaseItemMatchesIntent(
+        item,
+        intent
+      );
+
+
+    if (
+      score > highestScore
+    ) {
+
+      highestScore =
+        score;
+
+      bestMatch =
+        item;
+
+    }
+
+  }
+
+
+  /*
+     Strong threshold.
+
+     This prevents a random registration
+     answer from being returned just because
+     the word "registration" appeared.
+  */
+
+  if (
+    bestMatch &&
+    highestScore >= 12
+  ) {
+
+    return (
+      "📚 " +
+      (
+        bestMatch.category ||
+        "GENERAL"
+      )
+        .toUpperCase() +
+      "\n\n" +
+
+      bestMatch.answer +
+
+      "\n\n" +
+
+      "✅ Verified information from Debryne Info." +
+
+      "\n\n" +
+
+      "Is there anything else you'd like to know? 😊"
+    );
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =========================================================
+   GENERAL FIREBASE MATCH
+   Used when no special intent is detected.
+========================================================= */
+
+function findGeneralFirebaseAnswer(
   question,
   information
 ) {
@@ -571,9 +1083,7 @@ function findBestFirebaseAnswer(
 
 
     const storedQuestion =
-      cleanText(
-        item.question
-      );
+      cleanText(item.question);
 
 
     const storedWords =
@@ -585,23 +1095,18 @@ function findBestFirebaseAnswer(
     let score = 0;
 
 
-    // ======================================
-    // EXACT QUESTION MATCH
-    // ======================================
+    /* EXACT QUESTION */
 
     if (
-      userText ===
-      storedQuestion
+      userText === storedQuestion
     ) {
 
-      score += 30;
+      score += 40;
 
     }
 
 
-    // ======================================
-    // PHRASE CONTAINMENT
-    // ======================================
+    /* PHRASE */
 
     if (
       userText.includes(
@@ -609,7 +1114,7 @@ function findBestFirebaseAnswer(
       )
     ) {
 
-      score += 15;
+      score += 20;
 
     }
 
@@ -620,14 +1125,12 @@ function findBestFirebaseAnswer(
       )
     ) {
 
-      score += 12;
+      score += 15;
 
     }
 
 
-    // ======================================
-    // WORD MATCHING
-    // ======================================
+    /* WORD MATCH */
 
     let matchedWords = 0;
 
@@ -641,13 +1144,12 @@ function findBestFirebaseAnswer(
       ) {
 
         if (
-          wordsAreSimilar(
-            userWord,
-            storedWord
-          )
+          userWord === storedWord ||
+          userWord.startsWith(storedWord) ||
+          storedWord.startsWith(userWord)
         ) {
 
-          score += 3;
+          score += 4;
 
           matchedWords++;
 
@@ -660,130 +1162,52 @@ function findBestFirebaseAnswer(
     }
 
 
-    // ======================================
-    // TOPIC MATCHING
-    // ======================================
-
-    score += topicsMatch(
-      userText,
-      storedQuestion
-    );
-
-
-    // ======================================
-    // CATEGORY MATCHING
-    // ======================================
+    /* MATCH RATIO */
 
     if (
-      item.category
+      userWords.length > 0
     ) {
 
-      const category =
-        cleanText(
-          item.category
-        );
-
-
-      if (
-        userText.includes(
-          category
-        )
-      ) {
-
-        score += 6;
-
-      }
-
-
-      // Category synonym support
-
-      for (
-        const groupName in synonymGroups
-      ) {
-
-        const words =
-          synonymGroups[groupName];
-
-
-        let categoryMatches =
-          false;
-
-
-        for (
-          const word of words
-        ) {
-
-          if (
-            category.includes(
-              cleanText(word)
-            ) &&
-            userText.includes(
-              cleanText(word)
-            )
-          ) {
-
-            categoryMatches = true;
-
-            break;
-
-          }
-
-        }
-
-
-        if (
-          categoryMatches
-        ) {
-
-          score += 5;
-
-        }
-
-      }
-
-    }
-
-
-    // ======================================
-    // MATCH QUALITY BONUS
-    // ======================================
-
-    if (
-      userWords.length > 0 &&
-      matchedWords > 0
-    ) {
-
-      const matchRatio =
+      const ratio =
         matchedWords /
         userWords.length;
 
 
       if (
-        matchRatio >= 0.75
+        ratio >= 0.8
       ) {
 
-        score += 8;
+        score += 12;
 
       }
 
       else if (
-        matchRatio >= 0.5
+        ratio >= 0.6
       ) {
 
-        score += 4;
+        score += 7;
 
       }
 
     }
 
 
-    // ======================================
-    // SAVE BEST MATCH
-    // ======================================
+    /* CATEGORY */
 
     if (
-      score >
-      highestScore
+      item.category &&
+      userText.includes(
+        cleanText(item.category)
+      )
+    ) {
+
+      score += 8;
+
+    }
+
+
+    if (
+      score > highestScore
     ) {
 
       highestScore =
@@ -797,23 +1221,23 @@ function findBestFirebaseAnswer(
   }
 
 
-  // ========================================
-  // REQUIRE A STRONG MATCH
-  // ========================================
+  /*
+     Strong threshold for general
+     matching to avoid false answers.
+  */
 
   if (
     bestMatch &&
-    highestScore >= 7
+    highestScore >= 10
   ) {
 
     return (
-
       "📚 " +
-
       (
         bestMatch.category ||
         "GENERAL"
-      ).toUpperCase() +
+      )
+        .toUpperCase() +
 
       "\n\n" +
 
@@ -826,7 +1250,6 @@ function findBestFirebaseAnswer(
       "\n\n" +
 
       "Is there anything else you'd like to know? 😊"
-
     );
 
   }
@@ -837,9 +1260,9 @@ function findBestFirebaseAnswer(
 }
 
 
-// ==========================================
-// FIND DEFAULT ANSWER
-// ==========================================
+/* =========================================================
+   DEFAULT CONVERSATION
+========================================================= */
 
 function findDefaultAnswer(
   question
@@ -870,9 +1293,15 @@ function findDefaultAnswer(
 
 
       if (
-        text.includes(
-          cleanKeyword
-        )
+        text === cleanKeyword
+      ) {
+
+        score += 8;
+
+      }
+
+      else if (
+        text.includes(cleanKeyword)
       ) {
 
         score +=
@@ -886,8 +1315,7 @@ function findDefaultAnswer(
 
 
     if (
-      score >
-      highestScore
+      score > highestScore
     ) {
 
       highestScore =
@@ -916,9 +1344,43 @@ function findDefaultAnswer(
 }
 
 
-// ==========================================
-// FIND ANSWER
-// ==========================================
+/* =========================================================
+   UNKNOWN QUESTION
+========================================================= */
+
+function unknownAnswer() {
+
+  return (
+    "🤔 I couldn't find a verified answer " +
+    "to that question yet.\n\n" +
+
+    "I only answer questions using " +
+    "verified information added to Debryne Info.\n\n" +
+
+    "You can ask me about:\n\n" +
+
+    "🏫 School\n" +
+    "💻 Computer Science\n" +
+    "🎓 NACOS\n" +
+    "🏛️ SUG\n" +
+    "🔬 SOSSA\n" +
+    "🧑‍💻 SIWES\n" +
+    "📝 Exams\n" +
+    "📚 Registration\n" +
+    "💰 School Fees\n" +
+    "🎓 Admission\n" +
+    "📊 Results\n\n" +
+
+    "If the information has not been added " +
+    "by an administrator yet, I won't guess. 😊"
+  );
+
+}
+
+
+/* =========================================================
+   MAIN ANSWER ENGINE
+========================================================= */
 
 async function findAnswer(
   question
@@ -928,12 +1390,9 @@ async function findAnswer(
     cleanText(question);
 
 
-  // ========================================
-  // THANK YOU
-  // ========================================
+  /* THANK YOU */
 
   const thanksWords = [
-
     "thank you",
     "thanks",
     "thank u",
@@ -943,7 +1402,6 @@ async function findAnswer(
     "i appreciate",
     "appreciate you",
     "much appreciated"
-
   ];
 
 
@@ -952,19 +1410,13 @@ async function findAnswer(
   ) {
 
     if (
-      text.includes(
-        phrase
-      )
+      text.includes(phrase)
     ) {
 
       return (
-
         "😊 You're always welcome!\n\n" +
-
         "I'm always here to help. " +
-
         "Is there anything else you'd like to know? 💎🤖"
-
       );
 
     }
@@ -972,19 +1424,15 @@ async function findAnswer(
   }
 
 
-  // ========================================
-  // GREETINGS
-  // ========================================
+  /* GREETING */
 
   const greetings = [
-
     "hello",
     "hi",
     "hey",
     "good morning",
     "good afternoon",
     "good evening"
-
   ];
 
 
@@ -1000,21 +1448,13 @@ async function findAnswer(
     ) {
 
       return (
-
         "👋 Hello! Welcome to Debryne Info.\n\n" +
-
         "I'm here to help you find verified information " +
-
         "about your school and department.\n\n" +
-
         "You can ask me about your school, " +
-
         "Computer Science, NACOS, SUG, SOSSA, " +
-
-        "SIWES, registration, exams and more.\n\n" +
-
+        "SIWES, registration, admission, exams and more.\n\n" +
         "How can I help you today? 😊"
-
       );
 
     }
@@ -1022,18 +1462,14 @@ async function findAnswer(
   }
 
 
-  // ========================================
-  // GOODBYE
-  // ========================================
+  /* GOODBYE */
 
   const goodbyeWords = [
-
     "bye",
     "goodbye",
     "see you",
     "see u",
     "good night"
-
   ];
 
 
@@ -1042,19 +1478,13 @@ async function findAnswer(
   ) {
 
     if (
-      text.includes(
-        phrase
-      )
+      text.includes(phrase)
     ) {
 
       return (
-
         "👋 Goodbye!\n\n" +
-
         "Have a great day! Feel free to come back " +
-
         "whenever you need verified information. 💎❤️"
-
       );
 
     }
@@ -1062,38 +1492,58 @@ async function findAnswer(
   }
 
 
-  // ========================================
-  // FIREBASE VERIFIED INFORMATION
-  // ========================================
+  /* LOAD VERIFIED INFORMATION */
 
   const firebaseInformation =
     await getFirebaseInformation();
 
 
-  const firebaseAnswer =
-    findBestFirebaseAnswer(
+  /* =====================================================
+     1. TRY INTENT MATCH FIRST
+  ====================================================== */
+
+  const intentAnswer =
+    findAnswerByIntent(
       question,
       firebaseInformation
     );
 
 
   if (
-    firebaseAnswer
+    intentAnswer
   ) {
 
-    return firebaseAnswer;
+    return intentAnswer;
 
   }
 
 
-  // ========================================
-  // DEFAULT KNOWLEDGE
-  // ========================================
+  /* =====================================================
+     2. TRY GENERAL FIREBASE MATCH
+  ====================================================== */
+
+  const generalAnswer =
+    findGeneralFirebaseAnswer(
+      question,
+      firebaseInformation
+    );
+
+
+  if (
+    generalAnswer
+  ) {
+
+    return generalAnswer;
+
+  }
+
+
+  /* =====================================================
+     3. BASIC CONVERSATION
+  ====================================================== */
 
   const defaultAnswer =
-    findDefaultAnswer(
-      question
-    );
+    findDefaultAnswer(question);
 
 
   if (
@@ -1105,52 +1555,18 @@ async function findAnswer(
   }
 
 
-  // ========================================
-  // UNKNOWN QUESTION
-  // ========================================
+  /* =====================================================
+     4. NOTHING VERIFIED
+  ====================================================== */
 
-  return (
-
-    "🤔 I couldn't find a verified answer " +
-
-    "to that question yet.\n\n" +
-
-    "You can ask me about:\n\n" +
-
-    "🏫 School\n" +
-
-    "💻 Computer Science\n" +
-
-    "🎓 NACOS\n" +
-
-    "🏛️ SUG\n" +
-
-    "🔬 SOSSA\n" +
-
-    "🧑‍💻 SIWES\n" +
-
-    "📝 Exams\n" +
-
-    "📚 Registration\n" +
-
-    "💰 School Fees\n" +
-
-    "🎓 Admission\n" +
-
-    "📊 Results\n\n" +
-
-    "If you have another question, feel free " +
-
-    "to ask me. 😊"
-
-  );
+  return unknownAnswer();
 
 }
 
 
-// ==========================================
-// ADD MESSAGE
-// ==========================================
+/* =========================================================
+   ADD MESSAGE
+========================================================= */
 
 function addMessage(
   text,
@@ -1164,9 +1580,7 @@ function addMessage(
 
 
   if (!chatBox) {
-
     return;
-
   }
 
 
@@ -1231,9 +1645,7 @@ function addMessage(
     );
 
 
-  if (
-    chatArea
-  ) {
+  if (chatArea) {
 
     chatArea.scrollTop =
       chatArea.scrollHeight;
@@ -1243,9 +1655,9 @@ function addMessage(
 }
 
 
-// ==========================================
-// TYPING INDICATOR
-// ==========================================
+/* =========================================================
+   TYPING INDICATOR
+========================================================= */
 
 function showTyping() {
 
@@ -1256,9 +1668,7 @@ function showTyping() {
 
 
   if (!chatBox) {
-
     return;
-
   }
 
 
@@ -1277,15 +1687,11 @@ function showTyping() {
 
 
   message.innerHTML = `
-
-    <div class="avatar">
-      D
-    </div>
+    <div class="avatar">D</div>
 
     <div class="bubble">
       🤔 Checking verified information...
     </div>
-
   `;
 
 
@@ -1300,9 +1706,7 @@ function showTyping() {
     );
 
 
-  if (
-    chatArea
-  ) {
+  if (chatArea) {
 
     chatArea.scrollTop =
       chatArea.scrollHeight;
@@ -1312,9 +1716,9 @@ function showTyping() {
 }
 
 
-// ==========================================
-// REMOVE TYPING
-// ==========================================
+/* =========================================================
+   REMOVE TYPING
+========================================================= */
 
 function removeTyping() {
 
@@ -1324,9 +1728,7 @@ function removeTyping() {
     );
 
 
-  if (
-    typing
-  ) {
+  if (typing) {
 
     typing.remove();
 
@@ -1335,9 +1737,9 @@ function removeTyping() {
 }
 
 
-// ==========================================
-// SEND QUESTION
-// ==========================================
+/* =========================================================
+   SEND QUESTION
+========================================================= */
 
 async function sendQuestion() {
 
@@ -1348,9 +1750,7 @@ async function sendQuestion() {
 
 
   if (!input) {
-
     return;
-
   }
 
 
@@ -1359,9 +1759,7 @@ async function sendQuestion() {
 
 
   if (!question) {
-
     return;
-
   }
 
 
@@ -1395,9 +1793,11 @@ async function sendQuestion() {
     );
 
 
-  } catch (
-    error
-  ) {
+  }
+
+
+  catch (error) {
+
 
     console.error(
       "ANSWER ERROR:",
@@ -1411,7 +1811,7 @@ async function sendQuestion() {
     addMessage(
 
       "❌ I couldn't connect to the " +
-      "information database right now.\n\n" +
+      "verified information database right now.\n\n" +
 
       "Please try again later. 😊",
 
@@ -1424,9 +1824,9 @@ async function sendQuestion() {
 }
 
 
-// ==========================================
-// QUICK QUESTIONS
-// ==========================================
+/* =========================================================
+   QUICK QUESTIONS
+========================================================= */
 
 function askQuestion(
   question
@@ -1439,9 +1839,7 @@ function askQuestion(
 
 
   if (!input) {
-
     return;
-
   }
 
 
@@ -1454,9 +1852,9 @@ function askQuestion(
 }
 
 
-// ==========================================
-// ENTER KEY
-// ==========================================
+/* =========================================================
+   ENTER KEY
+========================================================= */
 
 const input =
   document.getElementById(
@@ -1464,17 +1862,14 @@ const input =
   );
 
 
-if (
-  input
-) {
+if (input) {
 
   input.addEventListener(
     "keydown",
     function(event) {
 
       if (
-        event.key ===
-        "Enter"
+        event.key === "Enter"
       ) {
 
         event.preventDefault();
@@ -1489,9 +1884,9 @@ if (
 }
 
 
-// ==========================================
-// MAKE FUNCTIONS AVAILABLE
-// ==========================================
+/* =========================================================
+   MAKE FUNCTIONS AVAILABLE TO HTML
+========================================================= */
 
 window.sendQuestion =
   sendQuestion;
