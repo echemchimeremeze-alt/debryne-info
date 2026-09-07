@@ -13,7 +13,7 @@
 
 <div class="app">
 
-  <!-- LOGIN -->
+  <!-- LOGIN SCREEN -->
 
   <div id="loginScreen" class="admin-login">
 
@@ -39,7 +39,11 @@
         autocomplete="current-password"
       >
 
-      <button id="loginButton" class="save-btn">
+      <button
+        type="button"
+        id="loginButton"
+        class="save-btn"
+      >
         🔐 Login
       </button>
 
@@ -50,7 +54,7 @@
   </div>
 
 
-  <!-- ADMIN DASHBOARD -->
+  <!-- DASHBOARD -->
 
   <div id="dashboard" style="display:none;">
 
@@ -58,9 +62,7 @@
 
       <div class="brand">
 
-        <div class="logo">
-          D
-        </div>
+        <div class="logo">D</div>
 
         <div>
           <h1>Debryne Info</h1>
@@ -69,7 +71,11 @@
 
       </div>
 
-      <button id="logoutButton" class="logout-btn">
+      <button
+        type="button"
+        id="logoutButton"
+        class="logout-btn"
+      >
         Logout
       </button>
 
@@ -80,13 +86,9 @@
 
       <div class="welcome">
 
-        <div class="bot-icon">
-          🛠️
-        </div>
+        <div class="bot-icon">🛠️</div>
 
-        <h2>
-          Verified Information
-        </h2>
+        <h2>Verified Information</h2>
 
         <p>
           Add official information that
@@ -98,52 +100,26 @@
 
       <div class="admin-card">
 
-        <label>
+        <label for="category">
           Category
         </label>
 
         <select id="category">
 
-          <option value="school">
-            🏫 School
-          </option>
-
-          <option value="department">
-            💻 Department
-          </option>
-
-          <option value="nacos">
-            🎓 NACOS
-          </option>
-
-          <option value="sug">
-            🏛️ SUG
-          </option>
-
-          <option value="sossa">
-            🔬 SOSSA
-          </option>
-
-          <option value="siwes">
-            🧑‍💻 SIWES
-          </option>
-
-          <option value="exams">
-            📝 Exams
-          </option>
-
-          <option value="fees">
-            💰 School Fees
-          </option>
-
-          <option value="general">
-            📢 General
-          </option>
+          <option value="school">🏫 School</option>
+          <option value="department">💻 Department</option>
+          <option value="nacos">🎓 NACOS</option>
+          <option value="sug">🏛️ SUG</option>
+          <option value="sossa">🔬 SOSSA</option>
+          <option value="siwes">🧑‍💻 SIWES</option>
+          <option value="exams">📝 Exams</option>
+          <option value="fees">💰 School Fees</option>
+          <option value="general">📢 General</option>
 
         </select>
 
 
-        <label>
+        <label for="question">
           Question / Topic
         </label>
 
@@ -154,7 +130,7 @@
         >
 
 
-        <label>
+        <label for="answer">
           Verified Answer
         </label>
 
@@ -166,17 +142,15 @@
 
 
         <button
-          class="save-btn"
+          type="button"
           id="saveButton"
+          class="save-btn"
         >
           💾 Save Information
         </button>
 
 
-        <div
-          id="status"
-          class="admin-status"
-        ></div>
+        <div id="status" class="admin-status"></div>
 
       </div>
 
@@ -185,9 +159,7 @@
 
     <footer>
 
-      <strong>
-        DEBRYNE UPDATE
-      </strong>
+      <strong>DEBRYNE UPDATE</strong>
 
       <span>
         • Bringing You Valid News When It Matters.
@@ -200,11 +172,173 @@
 </div>
 
 
-<script
-  type="module"
-  src="admin.js"
-></script>
+<!-- FIREBASE LOGIN CODE -->
+
+<script type="module">
+
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from
+"https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyDsUurd58zq5ltauZiDA4J3k_UR5JMI5Gs",
+
+  authDomain:
+    "debryne-info.firebaseapp.com",
+
+  databaseURL:
+    "https://debryne-info-default-rtdb.firebaseio.com/",
+
+  projectId:
+    "debryne-info",
+
+  storageBucket:
+    "debryne-info.firebasestorage.app",
+
+  messagingSenderId:
+    "505266636991",
+
+  appId:
+    "1:505266636991:web:e2a47f69524af12f6bde0a",
+
+  measurementId:
+    "G-2D9QNNQL69"
+
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+
+const loginScreen =
+  document.getElementById("loginScreen");
+
+const dashboard =
+  document.getElementById("dashboard");
+
+const loginButton =
+  document.getElementById("loginButton");
+
+const logoutButton =
+  document.getElementById("logoutButton");
+
+const loginStatus =
+  document.getElementById("loginStatus");
+
+
+/* LOGIN */
+
+loginButton.addEventListener(
+  "click",
+  async function () {
+
+    const email =
+      document.getElementById("email")
+        .value.trim();
+
+    const password =
+      document.getElementById("password")
+        .value;
+
+
+    if (!email || !password) {
+
+      loginStatus.textContent =
+        "⚠️ Enter your email and password.";
+
+      return;
+
+    }
+
+
+    loginButton.disabled = true;
+
+    loginButton.textContent =
+      "⏳ Logging in...";
+
+
+    try {
+
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      loginStatus.textContent =
+        "✅ Login successful!";
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      loginStatus.textContent =
+        "❌ " + error.message;
+
+      loginButton.disabled = false;
+
+      loginButton.textContent =
+        "🔐 Login";
+
+    }
+
+  }
+);
+
+
+/* CHECK LOGIN */
+
+onAuthStateChanged(
+  auth,
+  function(user) {
+
+    if (user) {
+
+      loginScreen.style.display =
+        "none";
+
+      dashboard.style.display =
+        "block";
+
+    } else {
+
+      loginScreen.style.display =
+        "flex";
+
+      dashboard.style.display =
+        "none";
+
+    }
+
+  }
+);
+
+
+/* LOGOUT */
+
+logoutButton.addEventListener(
+  "click",
+  async function() {
+
+    await signOut(auth);
+
+  }
+);
+
+</script>
 
 </body>
-
   </html>
