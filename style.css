@@ -1,0 +1,307 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #080b12;
+  color: white;
+  min-height: 100vh;
+}
+
+.app {
+  width: 100%;
+  max-width: 900px;
+  min-height: 100vh;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  background: #0b0f19;
+}
+
+.topbar {
+  padding: 18px;
+  border-bottom: 1px solid #20283a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: white;
+  color: #0b0f19;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.brand h1 {
+  font-size: 19px;
+}
+
+.brand p {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 3px;
+}
+
+.status {
+  color: #22c55e;
+  font-size: 13px;
+}
+
+.status span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px 18px;
+}
+
+.welcome {
+  text-align: center;
+  max-width: 600px;
+  margin: 15px auto 30px;
+}
+
+.bot-icon {
+  font-size: 45px;
+  margin-bottom: 12px;
+}
+
+.welcome h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.welcome p {
+  color: #9ca3af;
+  line-height: 1.6;
+}
+
+.chat-box {
+  max-width: 750px;
+  margin: auto;
+}
+
+.message {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  align-items: flex-start;
+}
+
+.message.user {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  min-width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: white;
+  color: #0b0f19;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.message.user .avatar {
+  background: #2563eb;
+  color: white;
+}
+
+.bubble {
+  max-width: 75%;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: #151b29;
+  color: #e5e7eb;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.message.user .bubble {
+  background: #2563eb;
+  color: white;
+}
+
+.quick-actions {
+  max-width: 750px;
+  margin: 25px auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.quick-actions button {
+  padding: 10px 13px;
+  border: 1px solid #293246;
+  border-radius: 20px;
+  background: #111827;
+  color: #d1d5db;
+  cursor: pointer;
+}
+
+.quick-actions button:hover {
+  background: #1c2535;
+}
+
+.input-area {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid #20283a;
+  background: #0b0f19;
+}
+
+.input-area input {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #293246;
+  outline: none;
+  background: #151b29;
+  color: white;
+  font-size: 15px;
+}
+
+.input-area button {
+  width: 50px;
+  border: none;
+  border-radius: 12px;
+  background: white;
+  color: #0b0f19;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+footer {
+  padding: 15px;
+  text-align: center;
+  border-top: 1px solid #20283a;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+footer strong {
+  color: white;
+}
+
+
+/* ADMIN */
+
+.admin-card {
+  max-width: 750px;
+  margin: auto;
+  background: #111827;
+  border: 1px solid #293246;
+  padding: 22px;
+  border-radius: 16px;
+}
+
+.admin-card label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 7px;
+  color: #d1d5db;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.admin-card input,
+.admin-card textarea,
+.admin-card select {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid #293246;
+  background: #171d2a;
+  color: white;
+  outline: none;
+  font-size: 14px;
+}
+
+.admin-card textarea {
+  resize: vertical;
+}
+
+.save-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: white;
+  color: #0b0f19;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.admin-status {
+  margin-top: 15px;
+  text-align: center;
+  color: #d1d5db;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin-status.success {
+  color: #22c55e;
+}
+
+.admin-status.error {
+  color: #ef4444;
+}
+
+
+@media (max-width: 600px) {
+
+  .topbar {
+    padding: 14px;
+  }
+
+  .welcome h2 {
+    font-size: 21px;
+  }
+
+  .bubble {
+    max-width: 82%;
+  }
+
+  .quick-actions button {
+    flex: 1 1 45%;
+  }
+
+  footer {
+    font-size: 11px;
+  }
+
+  }
