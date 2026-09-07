@@ -23,10 +23,13 @@ const defaultKnowledge = [
     ],
 
     answer:
-      "👋 Hello! I'm Debryne Info.\n\n" +
+      "👋 Hello! Welcome to Debryne Info.\n\n" +
       "I'm here to help you find verified information " +
       "about your school and department.\n\n" +
-      "What would you like to know?"
+      "You can ask me about school activities, " +
+      "Computer Science, NACOS, SUG, SOSSA, SIWES, " +
+      "registration, exams and more.\n\n" +
+      "How can I help you today? 😊"
   },
 
 
@@ -42,7 +45,8 @@ const defaultKnowledge = [
 
     answer:
       "😊 You're always welcome!\n\n" +
-      "I'm always here to help. 💎🤖"
+      "I'm always here to help. Is there anything else " +
+      "you'd like to know? 💎🤖"
   },
 
 
@@ -57,85 +61,15 @@ const defaultKnowledge = [
 
     answer:
       "👋 Goodbye!\n\n" +
-      "Have a great day and stay informed with Debryne Info. 💎"
-  },
-
-
-  {
-    keywords: [
-      "nacos",
-      "computing students",
-      "computer students association"
-    ],
-
-    answer:
-      "🎓 NACOS\n\n" +
-      "NACOS stands for Nigeria Association of Computing Students.\n\n" +
-      "Ask me about NACOS meetings, executives, events and announcements."
-  },
-
-
-  {
-    keywords: [
-      "sug",
-      "students union",
-      "student union"
-    ],
-
-    answer:
-      "🏛️ SUG\n\n" +
-      "SUG refers to the Students' Union Government.\n\n" +
-      "I can provide information about SUG activities and announcements."
-  },
-
-
-  {
-    keywords: [
-      "sossa",
-      "school of science",
-      "science students association"
-    ],
-
-    answer:
-      "🔬 SOSSA\n\n" +
-      "SOSSA refers to the School of Science Students Association.\n\n" +
-      "Ask me about verified SOSSA information and announcements."
-  },
-
-
-  {
-    keywords: [
-      "computer science",
-      "cs department",
-      "computing department"
-    ],
-
-    answer:
-      "💻 COMPUTER SCIENCE\n\n" +
-      "I can help with verified information about the Computer Science Department, " +
-      "including courses, registration, SIWES and departmental notices."
-  },
-
-
-  {
-    keywords: [
-      "siwes",
-      "industrial training",
-      "it placement",
-      "student industrial work"
-    ],
-
-    answer:
-      "🧑‍💻 SIWES\n\n" +
-      "SIWES refers to Students Industrial Work Experience Scheme.\n\n" +
-      "Ask me about SIWES requirements, procedures and announcements."
+      "Have a great day! Feel free to come back " +
+      "whenever you need verified information. 💎❤️"
   }
 
 ];
 
 
 // ==========================================
-// GET INFORMATION FROM FIREBASE
+// GET FIREBASE INFORMATION
 // ==========================================
 
 async function getFirebaseInformation() {
@@ -157,7 +91,6 @@ async function getFirebaseInformation() {
 
 
     return Object.values(snapshot.val());
-
 
   } catch (error) {
 
@@ -248,7 +181,7 @@ const stopWords = new Set([
 
 
 // ==========================================
-// GET IMPORTANT WORDS
+// IMPORTANT WORDS
 // ==========================================
 
 function getImportantWords(text) {
@@ -264,10 +197,13 @@ function getImportantWords(text) {
 
 
 // ==========================================
-// SIMPLE WORD SIMILARITY
+// WORD SIMILARITY
 // ==========================================
 
-function wordsAreSimilar(word1, word2) {
+function wordsAreSimilar(
+  word1,
+  word2
+) {
 
   if (word1 === word2) {
 
@@ -276,7 +212,6 @@ function wordsAreSimilar(word1, word2) {
   }
 
 
-  // registration / registrations
   if (
     word1.startsWith(word2) ||
     word2.startsWith(word1)
@@ -287,7 +222,6 @@ function wordsAreSimilar(word1, word2) {
   }
 
 
-  // exam / exams
   if (
     word1.endsWith("s") &&
     word1.slice(0, -1) === word2
@@ -314,7 +248,7 @@ function wordsAreSimilar(word1, word2) {
 
 
 // ==========================================
-// SMART FIREBASE MATCHING
+// FIND BEST FIREBASE ANSWER
 // ==========================================
 
 function findBestFirebaseAnswer(
@@ -325,10 +259,8 @@ function findBestFirebaseAnswer(
   const userText =
     cleanText(question);
 
-
   const userWords =
     getImportantWords(question);
-
 
   let bestMatch = null;
 
@@ -351,18 +283,13 @@ function findBestFirebaseAnswer(
     const storedQuestion =
       cleanText(item.question);
 
-
     const storedWords =
       getImportantWords(item.question);
-
 
     let score = 0;
 
 
-    // ======================================
-    // EXACT PHRASE MATCH
-    // ======================================
-
+    // Exact phrase
     if (
       userText.includes(storedQuestion) ||
       storedQuestion.includes(userText)
@@ -373,10 +300,7 @@ function findBestFirebaseAnswer(
     }
 
 
-    // ======================================
-    // WORD MATCHING
-    // ======================================
-
+    // Word matching
     for (const userWord of userWords) {
 
       for (const storedWord of storedWords) {
@@ -397,15 +321,11 @@ function findBestFirebaseAnswer(
     }
 
 
-    // ======================================
-    // CATEGORY MATCH
-    // ======================================
-
+    // Category matching
     if (item.category) {
 
       const category =
         cleanText(item.category);
-
 
       if (
         userText.includes(category)
@@ -418,10 +338,7 @@ function findBestFirebaseAnswer(
     }
 
 
-    // ======================================
-    // IMPORTANT TOPIC WORDS
-    // ======================================
-
+    // Topic matching
     const topicWords = [
 
       "registration",
@@ -462,10 +379,6 @@ function findBestFirebaseAnswer(
     }
 
 
-    // ======================================
-    // SAVE BEST MATCH
-    // ======================================
-
     if (
       score > highestScore
     ) {
@@ -479,10 +392,6 @@ function findBestFirebaseAnswer(
   }
 
 
-  // ========================================
-  // RETURN ONLY STRONG ENOUGH MATCH
-  // ========================================
-
   if (
     bestMatch &&
     highestScore >= 3
@@ -495,8 +404,7 @@ function findBestFirebaseAnswer(
       (
         bestMatch.category ||
         "GENERAL"
-      )
-        .toUpperCase() +
+      ).toUpperCase() +
 
       "\n\n" +
 
@@ -504,7 +412,11 @@ function findBestFirebaseAnswer(
 
       "\n\n" +
 
-      "✅ Verified information from Debryne Info."
+      "✅ Verified information from Debryne Info." +
+
+      "\n\n" +
+
+      "Is there anything else you'd like to know? 😊"
 
     );
 
@@ -517,14 +429,15 @@ function findBestFirebaseAnswer(
 
 
 // ==========================================
-// DEFAULT KNOWLEDGE MATCHING
+// DEFAULT ANSWER
 // ==========================================
 
-function findDefaultAnswer(question) {
+function findDefaultAnswer(
+  question
+) {
 
   const text =
     cleanText(question);
-
 
   let bestMatch = null;
 
@@ -546,7 +459,6 @@ function findDefaultAnswer(question) {
         cleanText(keyword);
 
 
-      // Exact phrase
       if (
         text.includes(cleanKeyword)
       ) {
@@ -555,39 +467,6 @@ function findDefaultAnswer(question) {
           cleanKeyword.includes(" ")
             ? 5
             : 3;
-
-      }
-
-
-      // Individual words
-      const keywordWords =
-        getImportantWords(keyword);
-
-
-      const userWords =
-        getImportantWords(question);
-
-
-      for (
-        const keywordWord of keywordWords
-      ) {
-
-        for (
-          const userWord of userWords
-        ) {
-
-          if (
-            wordsAreSimilar(
-              keywordWord,
-              userWord
-            )
-          ) {
-
-            score += 2;
-
-          }
-
-        }
 
       }
 
@@ -626,9 +505,11 @@ function findDefaultAnswer(question) {
 // FIND ANSWER
 // ==========================================
 
-async function findAnswer(question) {
+async function findAnswer(
+  question
+) {
 
-  // Firebase verified information FIRST
+  // Firebase information comes first
   const firebaseInformation =
     await getFirebaseInformation();
 
@@ -647,9 +528,11 @@ async function findAnswer(question) {
   }
 
 
-  // Then default knowledge
+  // Default conversational answers
   const defaultAnswer =
-    findDefaultAnswer(question);
+    findDefaultAnswer(
+      question
+    );
 
 
   if (defaultAnswer) {
@@ -659,16 +542,13 @@ async function findAnswer(question) {
   }
 
 
-  // ========================================
-  // UNKNOWN QUESTION
-  // ========================================
-
+  // Unknown question
   return (
 
     "🤔 I couldn't find a verified answer " +
     "to that question yet.\n\n" +
 
-    "Try asking about:\n\n" +
+    "You can ask me about:\n\n" +
 
     "🏫 School\n" +
     "💻 Computer Science\n" +
@@ -680,8 +560,8 @@ async function findAnswer(question) {
     "📚 Registration\n" +
     "💰 School Fees\n\n" +
 
-    "If the information is not yet available, " +
-    "please check official school announcements."
+    "If you have another question, feel free " +
+    "to ask me. 😊"
 
   );
 
@@ -706,7 +586,6 @@ function addMessage(
   const message =
     document.createElement("div");
 
-
   message.className =
     `message ${type}`;
 
@@ -714,10 +593,8 @@ function addMessage(
   const avatar =
     document.createElement("div");
 
-
   avatar.className =
     "avatar";
-
 
   avatar.textContent =
     type === "bot"
@@ -728,10 +605,8 @@ function addMessage(
   const bubble =
     document.createElement("div");
 
-
   bubble.className =
     "bubble";
-
 
   bubble.innerText =
     text;
@@ -761,7 +636,7 @@ function addMessage(
 
 
 // ==========================================
-// SHOW TYPING
+// TYPING INDICATOR
 // ==========================================
 
 function showTyping() {
@@ -775,10 +650,8 @@ function showTyping() {
   const message =
     document.createElement("div");
 
-
   message.className =
     "message bot";
-
 
   message.id =
     "typingMessage";
@@ -911,7 +784,7 @@ async function sendQuestion() {
 
       "❌ I couldn't connect to the " +
       "information database right now.\n\n" +
-      "Please try again.",
+      "Please try again later. 😊",
 
       "bot"
 
@@ -985,12 +858,11 @@ if (input) {
 
 
 // ==========================================
-// MAKE FUNCTIONS AVAILABLE TO HTML
+// MAKE FUNCTIONS AVAILABLE
 // ==========================================
 
 window.sendQuestion =
   sendQuestion;
-
 
 window.askQuestion =
   askQuestion;
